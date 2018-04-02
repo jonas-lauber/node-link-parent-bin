@@ -42,6 +42,10 @@ describe('Sample project after installing and linking with `link-parent-bin`', f
         return expect(execInSample('npm run hello-dependency', 'packages/child-1')).to.eventually.have.property('stdout').and.match(/hello dependency/g);
     });
 
+    it('should be able to run linked dependency commands from child packages', () => {
+        return expect(execInSample('npm run hello-bin-string-dependency', 'packages/child-1')).to.eventually.have.property('stdout').and.match(/hello bin string dependency/g);
+    });
+
     it('should be able to run a linked dev dependency', () => {
         return expect(execInSample('npm run hello-dev-dependency', 'packages/child-1')).to.eventually.have.property('stdout').and.match(/hello dev dependency/g);
     });

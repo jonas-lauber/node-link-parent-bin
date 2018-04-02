@@ -1,0 +1,5 @@
+{
+    "name": "helloBinStringDependency",
+    "version": "0.0.0",
+    "bin": "hello-bin-string-dependency"
+}

@@ -10,7 +10,8 @@ export interface Dictionary {
 }
 
 export interface PackageJson {
-    bin?: Dictionary;
+    name?: string;
+    bin?: Dictionary | string;
     devDependencies?: Dictionary;
     dependencies?: Dictionary;
     localDependencies?: Dictionary;
@@ -41,10 +42,17 @@ export class ParentBinLinker {
             return fs.readFile(packageFile)
                 .then(content => {
                     const pkg: PackageJson = JSON.parse(content.toString());
-                    if (pkg.bin) {
-                        return Promise.all(Object.keys(pkg.bin).map(bin => Promise.all(childPackages.map(childPackage =>
-                            this.linkBin(bin, path.resolve(moduleDir, pkg.bin[bin]), childPackage)
-                                .catch(err => this.log.error(`Could not link bin ${bin} for child ${childPackage}.`, err))))));
+                    const bin: Dictionary | string = pkg.bin;
+                    if (bin) {
+                        if (typeof bin === 'string') {
+                            return Promise.all(childPackages.map(childPackage =>
+                                this.linkBin(pkg.name, path.resolve(moduleDir, bin), childPackage)
+                                    .catch(err => this.log.error(`Could not link bin ${bin} for child ${childPackage}.`, err))));
+                        } else {
+                            return Promise.all(Object.keys(bin).map((binName: string) => Promise.all(childPackages.map(childPackage =>
+                                this.linkBin(binName, path.resolve(moduleDir, bin[binName]), childPackage)
+                                    .catch(err => this.log.error(`Could not link bin ${binName} for child ${childPackage}.`, err))))));
+                        }
                     } else {
                         this.log.debug('Did not find a bin in dependency %s, skipping.', dependency);
                         return Promise.resolve(undefined);

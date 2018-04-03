@@ -35,24 +35,24 @@ function cmdShimIfExists(from: string, to: string): Promise<void> {
 }
 
 function linkIfExists(from: string, to: string) {
-    return fs.stat(from)
-        .then(_ => fs.readlink(to)
-            .then(fromOnDisk => {
-                const toDir = path.dirname(to);
-                const absoluteFrom = path.resolve(toDir, from);
-                const absoluteFromOnDisk = path.resolve(toDir, fromOnDisk);
-                if (absoluteFrom === absoluteFromOnDisk) {
-                    // if the link already exists and matches what we would do,
-                    // we don't need to do anything
-                    return undefined;
-                } else {
-                    info(`Different link at '${to}' already exists. Leaving it alone, the package is probably already installed in the child package.`);
-                }
-            })
-        ).catch(_ => {
-            /* link doesn't exist */ 
-            return symlink(from, to);
-        });
+    return symlink(from, to)
+        .catch(() => handleExistingSymlink(from, to));
+}
+
+function handleExistingSymlink(from: string, to: string) {
+    return fs.readlink(to)
+        .then(fromOnDisk => {
+            const toDir = path.dirname(to);
+            const absoluteFrom = path.resolve(toDir, from);
+            const absoluteFromOnDisk = path.resolve(toDir, fromOnDisk);
+            if (absoluteFrom === absoluteFromOnDisk) {
+                // if the link already exists and matches what we would do,
+                // we don't need to do anything
+                return undefined;
+            } else {
+                info(`Different link at '${to}' already exists. Leaving it alone, the package is probably already installed in the child package.`);
+            }
+        })
 }
 
 function info(message: string, ...args: any[]) {

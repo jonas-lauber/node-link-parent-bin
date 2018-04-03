@@ -13,6 +13,7 @@ describe('link', () => {
     let sandbox: sinon.SinonSandbox;
     let platform: sinon.SinonStub;
     let symlink: sinon.SinonStub;
+    let readlink: sinon.SinonStub;
     let cmdShimIfExist: sinon.SinonStub;
     let logStub: {
         info: sinon.SinonStub;
@@ -21,6 +22,7 @@ describe('link', () => {
     beforeEach(() => {
         sandbox = sinon.sandbox.create();
         symlink = sandbox.stub(fs, 'symlink');
+        readlink = sandbox.stub(fs, 'readlink').resolves(undefined);
         cmdShimIfExist = sandbox.stub(cmdShim, 'ifExists');
         sandbox.stub(FSUtils, 'mkdirp').resolves(undefined);
         platform = sandbox.stub(os, 'platform');
@@ -48,17 +50,37 @@ describe('link', () => {
         it('should reject when `symlink` rejects', () => {
             const err = new Error('some error');
             symlink.rejects(err);
-            return expect(link.link(path.resolve('package.json'), 'some/link')).to.be.rejectedWith(err);
+            const result: Promise<any> = link.link(path.resolve('package.json'), 'some/link');
+            return expect(result).to.be.rejectedWith(err);
         });
 
-        it('should not symlink when `to` already exists', async () => {
+        it('should forward error if target folder cannot be read', () => {
+            const symlinkErr = new Error('some error');
+            const readLinkErr = new Error('some other error');
+            symlink.rejects(symlinkErr);
+            readlink.rejects(readLinkErr);
+            const result: Promise<any> = link.link(path.resolve('package.json'), 'some/link');
+            return expect(result).to.be.rejectedWith(symlinkErr);
+        });
+
+        it('should display message if the symlink we try to link is different from the one already there', async () => {
             const to = path.resolve('package.json');
             const from = to;
-            sandbox.stub(fs, 'readlink').resolves('something else');
+            symlink.rejects(new Error('some error'));
+            readlink.resolves('otherLink');
             await link.link(from, to);
-            expect(fs.symlink).not.called;
             expect(logStub.info).calledWith(`Different link at '${to}' already exists. Leaving it alone, the package is probably already installed in the child package.`);
         });
+
+        it('should NOT display message if the symlink we try to link is the same as the one already there', async () => {
+            const to = path.resolve('package.json');
+            const from = to;
+            symlink.rejects(new Error('some error'));
+            readlink.resolves(from);
+            await link.link(from, to);
+            expect(logStub.info).not.called;
+        });
+
     });
 
     describe('when platform === win32', () => {

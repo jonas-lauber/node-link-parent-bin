@@ -6,7 +6,7 @@ import { FSUtils } from './FSUtils';
 
 const cmdShim = require('cmd-shim');
 
-function symlink(from: string, to: string) {
+function symlink(from: string, to: string): Promise<any> {
     to = path.resolve(to)
     const toDir = path.dirname(to)
     const target = path.relative(toDir, from)
@@ -14,7 +14,7 @@ function symlink(from: string, to: string) {
         .then(() => fs.symlink(target, to, 'junction'));
 }
 
-export function link(from: string, to: string) {
+export function link(from: string, to: string): Promise<any> {
     if (platform() === 'win32') {
         return cmdShimIfExists(from, to);
     } else {
@@ -34,12 +34,12 @@ function cmdShimIfExists(from: string, to: string): Promise<void> {
     });
 }
 
-function linkIfExists(from: string, to: string) {
+function linkIfExists(from: string, to: string): Promise<any> {
     return symlink(from, to)
-        .catch(() => handleExistingSymlink(from, to));
+        .catch(((error) => handleSymlinkError(error, from, to)));
 }
 
-function handleExistingSymlink(from: string, to: string) {
+function handleSymlinkError(error: any, from: string, to: string): Promise<any> {
     return fs.readlink(to)
         .then(fromOnDisk => {
             const toDir = path.dirname(to);
@@ -53,6 +53,10 @@ function handleExistingSymlink(from: string, to: string) {
                 info(`Different link at '${to}' already exists. Leaving it alone, the package is probably already installed in the child package.`);
             }
         })
+        .catch(() => {
+            // this is not an handled exception, let's throw original error
+            throw error;
+        });
 }
 
 function info(message: string, ...args: any[]) {

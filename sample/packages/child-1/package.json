@@ -4,6 +4,7 @@
     "private": true,
     "scripts": {
         "hello-dependency": "helloDependency",
+        "hello-bin-string-dependency": "hello-bin-string-dependency",
         "hello-dev-dependency": "helloDevDependency",
         "link-parent-bin-help": "link-parent-bin --help"
     }

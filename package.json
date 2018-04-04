@@ -2,8 +2,8 @@
   "name": "link-parent-bin",
   "version": "0.1.3",
   "description": "",
-  "main": "src/ParentBinLinker.js",
-  "typings": "src/ParentBinLinker.d.ts",
+  "main": "dist/ParentBinLinker.js",
+  "typings": "dist/ParentBinLinker.d.ts",
   "bin": {
     "link-parent-bin": "bin/link-parent-bin"
   },
@@ -11,6 +11,7 @@
     "clean": "node tasks/clean.js",
     "prebuild": "npm run clean",
     "build": "tsc -p .",
+    "buildDist": "npm run clean && rimraf ./dist && tsc -p tsconfig-build-dist.json",
     "pretest": "npm run build",
     "test": "npm run unitTest && npm run integrationTest",
     "unitTest": "mocha test/helpers/*.js test/unit/**/*.js",

@@ -10,7 +10,7 @@ const expectToInclude = <T>(actual:T, expected: T) => {
 describe('program', () => {
 
     describe('parse', () => {
-        it('should parse [] to default values', () => {
+        it('should parse ["command"] to default values', () => {
             const defaultOptions: Options = {  
                 logLevel: 'info',
                 linkDependencies: false,
@@ -18,7 +18,7 @@ describe('program', () => {
                 linkLocalDependencies: false,
                 childDirectoryRoot: 'packages'
             }
-            const actualOptions = program.parse([]);
+            const actualOptions = program.parse(['command']);
             expect(actualOptions).to.contain.all.keys(defaultOptions);
             expectToInclude(actualOptions, defaultOptions);
         });
